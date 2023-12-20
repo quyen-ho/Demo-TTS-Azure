@@ -1,10 +1,10 @@
 import './App.css';
-import TSS from "./TTS";
+import TTS from "./TTS";
 
 function App() {
   return (
     <div className="App">
-      <TSS/>
+      <TTS/>
     </div>
   );
 }
