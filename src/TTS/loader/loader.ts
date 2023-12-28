@@ -1,10 +1,10 @@
 import * as THREE from 'three'
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
-const renderFn: any[] = [];
 
 // Set up base scene
-export const createScene = () => {
+export const createScene = (renderFn: any[]) => {
     // Base scene
     const scene = new THREE.Scene();
     const clock = new THREE.Clock();
@@ -98,19 +98,69 @@ export const createScene = () => {
     dirLight.target = dirLightTarget;
 
     // Environment
-    // const groundMat = new THREE.MeshStandardMaterial({
-    //     color: 0x808080,
-    //     depthWrite: false,
-    // });
-    // groundMat.metalness = 0;
-    // groundMat.refractionRatio = 0;
-    // const ground = new THREE.Mesh(
-    //     new THREE.PlaneBufferGeometry(100, 100),
-    //     groundMat
-    // );
-    // ground.rotation.x = -Math.PI / 2;
-    // ground.receiveShadow = true;
-    // scene.add(ground);
+    const groundMat = new THREE.MeshStandardMaterial({
+        color: 0x808080,
+        depthWrite: false,
+    });
+    groundMat.metalness = 0;
+    groundMat.refractionRatio = 0;
+
+    const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(100, 100),
+        groundMat
+    )
+    ground.rotation.x = -Math.PI / 2
+    ground.receiveShadow = true;
+    scene.add(ground)
 
     return { scene, camera, clock };
+}
+
+const loadCharacterOffset = (loader: GLTFLoader, path: string, scene: THREE.Scene) : Promise<{character: THREE.Group, bindPoseOffset: THREE.AnimationClip}> => new Promise( resolve => {
+    loader.load(path, async (gltf) => {
+        const character = gltf.scene;
+        scene.add(character);
+        const [bindPoseOffset] = gltf.animations;
+        if (bindPoseOffset) {
+            THREE.AnimationUtils.makeClipAdditive(bindPoseOffset);
+        }
+        character.traverse(object => {
+            // shadow
+            if (object.type === "SkinnedMesh") {
+                object.castShadow = true;
+            }
+        });
+
+        resolve({ character, bindPoseOffset })
+    })
+})
+
+
+export const loadCharacter =  async (
+    scene: THREE.Scene,
+    characterFile: string,
+    animationPath: string,
+    animationFiles: string[]
+) => {
+    // Asset loader
+    const gltfLoader = new GLTFLoader();
+    const characterOffset = await loadCharacterOffset(gltfLoader, characterFile, scene)
+    const {character, bindPoseOffset} = characterOffset
+    
+
+    // Load animations
+    const clips: THREE.AnimationClip[][] = await Promise.all(
+        animationFiles.map((filename) => {
+            const filePath = `${animationPath}/${filename}`;
+
+            const arrayClip = new Promise<THREE.AnimationClip[]>(resolve => {
+                gltfLoader.load(filePath, async (gltf) => {
+                    resolve(gltf.animations)
+                })
+            })             
+            return arrayClip
+        })
+    );
+    
+    return { character, clips, bindPoseOffset };
 }

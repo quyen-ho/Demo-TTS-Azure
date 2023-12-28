@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: MIT-0
 import * as THREE from "three";
 import CoreTextToSpeechFeature from "../../core/awspack/TextToSpeechFeature";
-import SpeechSDK from "./Speech";
+// import { CustomCommandsConfig } from "../../SpeechSDK-JavaScript-1.18.0/microsoft.cognitiveservices.speech.sdk.bundle";
+// import { SpeechConfigImpl } from "../../SpeechSDK-JavaScript-1.18.0/microsoft.cognitiveservices.speech.sdk.bundle.js";
+import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 
 /**
  * @extends core/awspack/TextToSpeechFeature

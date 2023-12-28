@@ -1088,10 +1088,12 @@ class AbstractTextToSpeechFeature extends AbstractHostFeature {
             }
           })
           .catch((error) => {
+            console.log("error: ", error);
             currentPromise.play.reject(error);
           });
       })
       .catch((e) => {
+        console.log("e: ", e);
         e = `Cannot ${playMethod} speech ${text} on host ${this.host.id}. ${e}`;
         currentPromise.play.reject(e);
       });
